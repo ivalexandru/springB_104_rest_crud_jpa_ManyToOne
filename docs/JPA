@@ -1,0 +1,74 @@
+Java Persistance api - specification that lets you do ORM.
+you map the entity classes into sql tables
+
+tell jpa that the model is the 'thing' we need to save to the db.
+so we add the annotations in the model class
+(map obj of that class to the relational db)
+(each one of my member variables will be columns, each instance of the model class will be a row)
+
+
+
+create a table called TopicModel, that has 3 columns (id, name, description):
+( @Id means that is the primary key )
+
+@Entity
+public class TopicModel {
+    @Id
+    private String id;
+    private String name;
+    private String description;
+
+for the data, jpa automatically provides the class, all you need is to create an interface:
+( you get the most common methods out of the box. crud..)
+//the id in our model class is a String, therefore <.. , String>
+public interface TopicRepository extends CrudRepository<TopicModel, String> {
+
+}
+
+
+then, you inject the TopicRepository into your service
+so you can use the methods from the interface impl:
+
+    //inject an instance of the TR:
+    @Autowired
+    private TopicRepository topicRepository;
+
+   create a connexion between Topics and Courses
+   in the CourseModel:
+
+       //establish a many to one relationship between the topic and course
+       // (JPA does this, and hibernate or other frameworks can understand this)
+       @ManyToOne
+       private TopicModel topic;
+
+       then add the topic to the connstructor:
+       this.topic = new TopicModel(topicId, "", "");
+
+        and in the interface, you can create your own methods, if the methods from there do not suit you:
+
+        //the id in our model class is a String, therefore <.. , String>
+        public interface CourseRepository extends CrudRepository<CourseModel, String> {
+
+            //when the method needed does not exist in the CrudRepository,
+            //we manually add it:
+
+            //name the methods so that JPA PROVIDES THE METHODS AUTOMATICALLY:
+            //start with "find",
+            //then filter by a condition: "By"
+        //    the property based on which we want to filter: "name"
+            // YOU DON'T HAVE TO IMPLEMENT THE METHOD. jpa will do that!
+
+            // get all the courses given a particular name:
+            // ( courseModel has a 'name' field )
+
+            //searches in the db for All the courses with the specified name
+        //    ex:
+        //    public List<CourseModel> findByName(String name);
+
+
+            //specify the 'id', that is the field in the TopicModel class
+            // Topic here is from the property ( field ) in the CourseModel class
+            // the one you annotate with @ManyToOne
+            // not the className (that would be TopicModel)
+            public List<CourseModel> findByTopicId(String name);
+        }
